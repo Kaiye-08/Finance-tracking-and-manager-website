@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ArthaFlow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#faf6ec;--sf:#fffdf7;--ink:#18281f;--mut:#5a6759;--ln:#dcdfcd;--pr:#1f4d3a;--pr2:#e2ead9;--onpr:#fffdf7;--sa:#b07d12;--rd:#b4472a;--c1:#1f4d3a;--c2:#b8841a;--c3:#5b7c99;--c4:#4c9874;--c5:#e7e4d4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1612;--sf:#15221b;--ink:#ede9dc;--mut:#a3b0a2;--ln:#2a3b31;--pr:#7fd1a8;--pr2:#1c3328;--onpr:#0d1612;--sa:#e3b64c;--rd:#e8896a;--c1:#4e9e78;--c2:#e3b64c;--c3:#7fa3c4;--c4:#bfe8d2;--c5:#2a3a31;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1612;--sf:#15221b;--ink:#ede9dc;--mut:#a3b0a2;--ln:#2a3b31;--pr:#7fd1a8;--pr2:#1c3328;--onpr:#0d1612;--sa:#e3b64c;--rd:#e8896a;--c1:#4e9e78;--c2:#e3b64c;--c3:#7fa3c4;--c4:#bfe8d2;--c5:#2a3a31;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:28px;font-weight:800;margin:0;letter-spacing:-.02em;color:var(--pr)}
+h2{font-size:18px;margin:0 0 12px;font-weight:600}
+.tabs{display:flex;gap:6px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:4px;margin-bottom:16px}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);font:inherit;font-weight:600;padding:9px;border-radius:9px;cursor:pointer}
+.tabs button.on{background:var(--pr);color:var(--onpr)}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:18px;margin-bottom:16px}
+.mut{color:var(--mut);font-size:14px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:8px 10px;min-width:0;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--pr);outline-offset:1px}
+button{font:inherit}
+.btn{background:var(--pr);color:var(--onpr);border:0;border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--pr);border:1px dashed var(--pr)}
+.btn.sm{padding:5px 10px;font-size:14px}
+.x{background:none;border:0;color:var(--mut);cursor:pointer;font-size:20px;line-height:1;padding:4px 8px}
+.seg{display:inline-flex;border:1px solid var(--ln);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.seg button{border:0;background:none;color:var(--mut);padding:7px 14px;cursor:pointer;font-weight:600}
+.seg button.on{background:var(--pr2);color:var(--pr)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+.bar{display:flex;height:22px;border-radius:7px;overflow:hidden;background:var(--c5);margin:12px 0 8px}
+.bar i{display:block;height:100%}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
+.leg span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--k);margin-right:6px}
+.big{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.row{display:grid;grid-template-columns:1.4fr .9fr 1.3fr 1.6fr auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--ln)}
+.val{display:flex;gap:4px}
+.val button{border:1px solid var(--ln);background:var(--pr2);color:var(--pr);border-radius:8px;padding:0 10px;font-weight:600;cursor:pointer}
+.pb{height:6px;border-radius:4px;background:var(--c5);margin-top:4px;overflow:hidden}
+.pb i{display:block;height:100%;background:var(--pr)}
+.pb.over i{background:var(--rd)}
+.warn{color:var(--rd);font-weight:600}
+.ok{color:var(--pr);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:20px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+td,th{padding:6px 4px;text-align:right;border-bottom:1px solid var(--ln)}
+th:first-child,td:first-child{text-align:left}
+details summary{cursor:pointer;color:var(--pr);font-weight:600;margin-top:12px}
+.note{background:var(--pr2);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+.score{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.score .big{font-size:64px;color:var(--pr)}
+.meter{margin:14px 0}
+.meter .top{display:flex;justify-content:space-between;font-size:14px}
+@media(max-width:700px){.row{grid-template-columns:1fr 1fr;}.row .nm,.row .calc{grid-column:1/-1}.row .x{justify-self:end}}
+@media(prefers-reduced-motion:no-preference){.bar i,.pb i{transition:width .25s}}
+.tx{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--ln);font-size:14px}
+.mo{display:flex;align-items:center;gap:10px;margin-bottom:12px}.mo b{min-width:140px;text-align:center}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:center}
+.tabs button{font-size:14px}@media(max-width:520px){.tabs button{padding:8px 2px;font-size:12.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>ArthaFlow</h1><div class="mut">Budget, loans and financial health in one place. Your data stays in this browser.</div></div>
+  <div style="display:flex;gap:8px;align-items:center"><select id="cur" aria-label="Currency" style="width:auto"></select><button class="btn ghost sm" id="reset">Reset all data</button></div>
+</header>
+<nav class="tabs" role="tablist">
+  <button data-tab="o" class="on">Overview</button><button data-tab="b">Budget</button><button data-tab="t">Spending</button><button data-tab="l">Loans</button><button data-tab="h">Health</button>
+</nav>
+<main>
+  <div id="p-o"></div><div id="p-b" hidden></div><div id="p-t" hidden></div><div id="p-l" hidden></div><div id="p-h" hidden></div>
+</main>
+<p class="mut" style="margin-top:24px">Planning tool only, not financial or tax advice. Tax notes are general summaries and may be out of date, so confirm with a qualified adviser.</p>
+<details class="card"><summary>Backup and data storage</summary><p class="mut">Your data is saved only in this browser (localStorage). It isn’t encrypted, synced between devices or backed up, and clearing browser data erases it. Avoid shared computers. Use “Show backup” to generate a copyable text backup, then save it somewhere safe. Backups are manual.</p><textarea id="bk" rows="5" style="width:100%;font:13px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:8px;padding:8px" aria-label="Backup data"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm" data-act="exp">Show backup</button><button class="btn sm ghost" data-act="imp">Restore from text</button></div></details>
+</div>
+<script>
+const K="arthaflow.v1",LEGACY_K="paisaplan.v1",$=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const N=(v,lo,hi,d=0)=>{v=Number(v);return Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):d};
+const B=(v,lo,hi,d)=>v===""||v==null?"":N(v,lo,hi,d);
+const nowMo=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")};
+const CUR=[["INR","₹ Indian rupee"],["USD","$ US dollar"],["EUR","€ Euro"],["GBP","£ British pound"],["AUD","A$ Australian dollar"],["CAD","C$ Canadian dollar"],["SGD","S$ Singapore dollar"],["AED","AED UAE dirham"],["JPY","¥ Japanese yen"],["CNY","CN¥ Chinese yuan"],["ZAR","R South African rand"],["NGN","₦ Nigerian naira"],["BRL","R$ Brazilian real"],["MXN","MX$ Mexican peso"],["PKR","Rs Pakistani rupee"],["BDT","৳ Bangladeshi taka"],["LKR","Rs Sri Lankan rupee"]];
+const cur=()=>(typeof S!=="undefined"&&S&&S.cur)||"INR";
+const COUNTRIES=[["IN","India"],["US","United States"],["GB","United Kingdom"],["CA","Canada"],["AU","Australia"],["SG","Singapore"],["AE","United Arab Emirates"],["DE","Germany"],["ZA","South Africa"],["XX","Other / not listed"]];
+const CC={INR:"IN",USD:"US",GBP:"GB",CAD:"CA",AUD:"AU",SGD:"SG",AED:"AE",ZAR:"ZA"};
+const cc=()=>(typeof S!=="undefined"&&S&&S.cc)||CC[cur()]||"XX";
+function taxNote(y){const i=fmt(y.i),T={
+ IN:`Year 1 tax view (old regime only): interest ${i} (Section 24(b) allows up to ₹2,00,000 for a self-occupied home) and principal ${fmt(y.p)} (counts towards the shared ₹1,50,000 Section 80C limit). The new regime doesn’t allow these deductions.`,
+ US:`Year 1 interest: ${i}. You can deduct mortgage interest on up to $750,000 of home debt (loans taken after 15 Dec 2017) if you itemize instead of taking the standard deduction.`,
+ GB:`Year 1 interest: ${i}. There is no tax relief on mortgage interest for the home you live in. On a buy-to-let, interest gets a 20% tax credit instead of a normal deduction.`,
+ CA:`Year 1 interest: ${i}. Mortgage interest on your main home isn’t deductible. If the property earns rental income, the interest generally is. The FHSA and Home Buyers’ Plan can help with the purchase.`,
+ AU:`Year 1 interest: ${i}. Interest on your own home isn’t deductible. On an investment property it generally is, against the rental income.`,
+ SG:`Year 1 interest: ${i}. Interest on a loan for a home you live in generally isn’t tax deductible. Check IRAS for rental property rules.`,
+ AE:`Year 1 interest: ${i}. The UAE has no personal income tax, so there is generally no tax relief to claim on home loan interest.`,
+ DE:`Year 1 interest: ${i}. Interest on a home you live in generally isn’t deductible. If you rent the property out, it can be deducted against the rental income.`,
+ ZA:`Year 1 interest: ${i}. Interest on the home you live in isn’t deductible. Interest on a rental property can generally be deducted against the rental income.`};
+ return T[cc()]||`Year 1 interest: ${i}. Tax relief on home loan interest varies a lot by country, and homes you live in often get none. Check your local rules.`}
+const fmt=n=>{try{return new Intl.NumberFormat(cur()==="INR"?"en-IN":"en",{style:"currency",currency:cur(),maximumFractionDigits:0}).format(Math.round(n||0))}catch(e){return Math.round(n||0).toLocaleString()}};
+const sym=()=>{try{return new Intl.NumberFormat("en",{style:"currency",currency:cur(),currencyDisplay:"narrowSymbol"}).formatToParts(0).find(p=>p.type==="currency").value}catch(e){return cur()}};
+const uid=()=>Math.random().toString(36).slice(2,8);
+const def=()=>({cur:"INR",tx:[],mo:nowMo(),mode:"fixed",fixed:"",months:["","","","","",""],saved:"",
+ cats:[["Rent / housing","need"],["Groceries","need"],["Transport","need"],["Utilities & bills","need"],["Eating out","want"],["Entertainment","want"],["Savings & investments","save"]]
+ .map(c=>({id:uid(),n:c[0],k:c[1],t:"pct",v:""})),loans:[]});
+const sid=v=>String(v||"").replace(/\W/g,"").slice(0,12)||uid();
+const obj=a=>(Array.isArray(a)?a:[]).filter(v=>v&&typeof v==="object");
+function clean(x){if(!x||typeof x!=="object"||!Array.isArray(x.cats))return null;const o=def(),oc=obj(x.cats).slice(0,60);
+ o.cur=CUR.some(c=>c[0]===x.cur)?x.cur:"INR";if(COUNTRIES.some(c=>c[0]===x.cc))o.cc=x.cc;
+ o.mode=x.mode==="irregular"?"irregular":"fixed";o.fixed=B(x.fixed,0,1e12);o.saved=B(x.saved,0,1e12);
+ o.months=[0,1,2,3,4,5].map(i=>{const v=(x.months||[])[i];return v===""||v==null?"":N(v,0,1e12)});
+ o.cats=oc.map(c=>({id:sid(c.id),n:String(c.n||"").slice(0,60),k:["need","want","save"].includes(c.k)?c.k:"need",t:c.t==="amt"?"amt":"pct",v:B(c.v,0,c.t==="amt"?1e12:100)}));
+ o.loans=obj(x.loans).slice(0,30).map(l=>({id:sid(l.id),n:String(l.n||"").slice(0,60),k:["home","business","other"].includes(l.k)?l.k:"other",p:B(l.p,0,1e12),r:B(l.r,0,100),y:B(l.y,.25,50,1),x:B(l.x,0,1e12),lump:B(l.lump,0,1e12),at:B(l.at,1,600,1)}));
+ o.tx=obj(x.tx).slice(0,20000).filter(t=>/^\d{4}-\d{2}-\d{2}$/.test(t.d)&&o.cats.some(c=>c.id===sid(t.c))).map(t=>({id:sid(t.id),d:t.d,e:String(t.e||"").slice(0,80),c:sid(t.c),a:N(t.a,0,1e12)}));
+ if(!Array.isArray(x.tx))oc.forEach((c,i)=>{if(+c.s>0)o.tx.push({id:uid(),d:nowMo()+"-01",e:"Carried over",c:o.cats[i].id,a:N(c.s,0,1e12)})});
+ o.mo=/^\d{4}-\d{2}$/.test(x.mo)?x.mo:nowMo();return o}
+let S=(()=>{try{
+  const current=localStorage.getItem(K);
+  if(current){const y=clean(JSON.parse(current));if(y)return y}
+  // One-time migration: preserve data saved by the earlier PaisaPlan prototype.
+  const legacy=localStorage.getItem(LEGACY_K);
+  if(legacy){const y=clean(JSON.parse(legacy));if(y){try{localStorage.setItem(K,JSON.stringify(y))}catch(e){}return y}}
+}catch(e){}return def()})();
+if(!S.cur)S.cur="INR";
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+
+/* ---------- maths ---------- */
+function inc(){
+  if(S.mode==="fixed")return +S.fixed||0;
+  const a=S.months.filter(v=>v!==""&&v!=null).map(Number);
+  if(!a.length)return 0;
+  return (a.reduce((x,y)=>x+y,0)/a.length+Math.min(...a))/2;
+}
+const weakest=()=>{const a=S.months.filter(v=>v!==""&&v!=null).map(Number);return a.length?Math.min(...a):0};
+const catAmt=c=>c.t==="pct"?inc()*(+c.v||0)/100:(+c.v||0);
+function emi(l){const P=N(l.p,0,1e12),n=Math.max(1,Math.round(N(l.y,0,50)*12)),r=N(l.r,0,100)/1200;if(!P||!l.y||l.r==="")return 0;return r?P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):P/n}
+function sim(l,extra,lump,lumpAt){
+  const r=N(l.r,0,100)/1200,n=Math.max(1,Math.round(N(l.y,0,50)*12)),e=emi(l);let b=N(l.p,0,1e12),m=0,I=0,Y={};
+  while(b>0.5&&m<1200){m++;const i=b*r;let pr=Math.min(e+extra-i,b);if(pr<0)pr=0;
+    if(lump&&m===lumpAt)pr=Math.min(b,pr+lump);
+    b-=pr;I+=i;const y=Math.ceil(m/12);Y[y]=Y[y]||{i:0,p:0,b:0};Y[y].i+=i;Y[y].p+=pr;Y[y].b=b;if(m>n*3)break}
+  return{m,I,Y}
+}
+const T=()=>{const i=inc(),em=S.loans.reduce((s,l)=>s+emi(l),0);let need=0,want=0,sv=0;
+  S.cats.forEach(c=>{const a=catAmt(c);c.k==="save"?sv+=a:c.k==="want"?want+=a:need+=a});
+  const alloc=em+need+want+sv;return{i,em,need,want,sv,alloc,free:i-alloc}};
+
+/* ---------- budget tab ---------- */
+function renderBudget(){
+  const m=S.months;
+  $("#p-b").innerHTML=`
+  <section class="card"><h2>Monthly income</h2>
+   <div class="seg"><button data-mode="fixed" class="${S.mode==="fixed"?"on":""}">Fixed salary / allowance</button><button data-mode="irregular" class="${S.mode==="irregular"?"on":""}">Irregular (business)</button></div>
+   ${S.mode==="fixed"?`<label>Amount per month (${sym()})</label><input type="number" min="0" data-a="s" data-f="fixed" value="${S.fixed}" placeholder="Enter your monthly income">`:
+   `<div class="grid">${m.map((v,i)=>`<div><label>${i+1} month${i?"s":""} ago (${sym()})</label><input type="number" min="0" data-a="m" data-i="${i}" value="${v}" placeholder="Enter amount"></div>`).join("")}</div>`}
+   <p class="mut" id="incnote"></p></section>
+  <section class="card" id="sum"></section>
+  <section class="card"><h2>Where it goes</h2><p class="mut">Pick % of income or a fixed amount for each line. Record real transactions on the Spending tab to compare them with this plan.</p>
+   <div id="rows">${S.cats.map(c=>`<div class="row" data-id="${c.id}">
+     <input class="nm" data-a="c" data-f="n" value="${esc(c.n)}" aria-label="Category name">
+     <select data-a="c" data-f="k" aria-label="Type"><option value="need" ${c.k==="need"?"selected":""}>Need</option><option value="want" ${c.k==="want"?"selected":""}>Want</option><option value="save" ${c.k==="save"?"selected":""}>Saving</option></select>
+     <div class="val"><input type="number" min="0" data-a="c" data-f="v" value="${c.v}" placeholder="${c.t==="pct"?"% of income":"Amount"}" aria-label="Value"><button data-act="tog" title="Switch between % and ${sym()}">${c.t==="pct"?"%":sym()}</button></div>
+     <div class="calc" id="cc-${c.id}"></div>
+     
+     <button class="x" data-act="delc" aria-label="Remove category">×</button></div>`).join("")}</div>
+   <button class="btn ghost" style="margin-top:10px" data-act="addc">Add category</button></section>`;
+  upBudget();
+}
+function upBudget(){
+  const t=T(),i=t.i,pc=v=>i?Math.max(0,v/i*100):0;
+  const n=$("#incnote");
+  if(n)n.textContent=S.mode==="fixed"?"":`Planning income: ${fmt(i)}. This blends your average with your weakest month, so the plan holds even in a slow month.`;
+  const over=t.alloc>i+0.5;
+  $("#sum").innerHTML=`<div class="mut">Money left to assign</div><div class="big ${over?"warn":""}">${fmt(t.free)}</div>
+   <div class="bar" role="img" aria-label="Income allocation">${[["Loan EMIs",t.em,"--c3"],["Needs",t.need,"--c1"],["Wants",t.want,"--c2"],["Savings",t.sv,"--c4"]].map(a=>`<i style="width:${Math.min(100,pc(a[1]))}%;background:var(${a[2]})"></i>`).join("")}</div>
+   <div class="leg">${[["Loan EMIs",t.em,"--c3"],["Needs",t.need,"--c1"],["Wants",t.want,"--c2"],["Savings",t.sv,"--c4"]].map(a=>`<span style="--k:var(${a[2]})">${a[0]} ${fmt(a[1])} (${pc(a[1]).toFixed(0)}%)</span>`).join("")}</div>
+   ${over?`<p class="warn">You’ve assigned ${fmt(-t.free)} more than your income. Trim a category or two.</p>`:t.free>0.5?`<p class="mut">${fmt(t.free)} is still unassigned. Give it a job, such as extra savings or a loan prepayment.</p>`:`<p class="ok">Every rupee is assigned.</p>`}
+   ${t.em?`<p class="mut">Loan EMIs of ${fmt(t.em)} are taken off the top automatically from the Loans tab.</p>`:""}`;
+  if(!i)$("#sum").innerHTML=`<p class="mut">Enter your monthly income above and your budget summary will appear here. Then set a percentage or amount for each category below.</p>`;
+  S.cats.forEach(c=>{const el=$("#cc-"+c.id);if(!el)return;const a=catAmt(c),sp=spent(c.id,S.mo),p=a?sp/a*100:(sp?100:0);
+    el.innerHTML=`<b>${c.v===""?"Not set":fmt(a)}</b>${c.t==="amt"&&i?` <span class="mut">(${(a/i*100).toFixed(1)}%)</span>`:""}
+    ${sp>0?`<div class="pb ${sp>a?"over":""}"><i style="width:${Math.min(100,p)}%"></i></div><div class="mut ${sp>a?"warn":""}">${sp>a?fmt(sp-a)+" over":fmt(a-sp)+" left"}</div>`:""}`});
+}
+
+/* ---------- loans tab ---------- */
+function renderLoans(){
+  $("#p-l").innerHTML=`<section class="card"><h2>Loan overview</h2><label>Country (for tax notes)</label><select id="cc" style="max-width:260px;margin-bottom:12px">${COUNTRIES.map(c=>`<option value="${c[0]}" ${c[0]===cc()?"selected":""}>${c[1]}</option>`).join("")}</select><div id="lsum"></div></section>
+  ${S.loans.map(l=>`<section class="card" data-id="${l.id}">
+   <div style="display:flex;justify-content:space-between;gap:8px"><h2>${esc(l.n)||"Loan"}</h2><button class="x" data-act="dell" aria-label="Remove loan">×</button></div>
+   <div class="grid">
+    <div><label>Name</label><input data-a="l" data-f="n" value="${esc(l.n)}"></div>
+    <div><label>Type</label><select data-a="l" data-f="k"><option value="home" ${l.k==="home"?"selected":""}>Home loan</option><option value="business" ${l.k==="business"?"selected":""}>Business loan</option><option value="other" ${l.k==="other"?"selected":""}>Other</option></select></div>
+    <div><label>Amount borrowed (${sym()})</label><input type="number" min="0" data-a="l" data-f="p" value="${l.p}"></div>
+    <div><label>Interest rate (% a year)</label><input type="number" min="0" max="100" step="0.05" data-a="l" data-f="r" value="${l.r}"></div>
+    <div><label>Term (years)</label><input type="number" min="0.25" max="50" step="0.25" data-a="l" data-f="y" value="${l.y}"></div>
+   </div>
+   <h2 style="margin-top:18px;font-size:16px">What if I prepay?</h2>
+   <div class="grid">
+    <div><label>Extra every month (${sym()})</label><input type="number" min="0" data-a="l" data-f="x" value="${l.x}"></div>
+    <div><label>One-time lump sum (${sym()})</label><input type="number" min="0" data-a="l" data-f="lump" value="${l.lump}"></div>
+    <div><label>Paid in month no.</label><input type="number" min="1" data-a="l" data-f="at" value="${l.at}"></div>
+   </div>
+   <div id="lo-${l.id}"></div></section>`).join("")}
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="addl" data-kind="home">Add a home loan</button><button class="btn" data-act="addl" data-kind="business">Add a business loan</button><button class="btn ghost" data-act="addl" data-kind="other">Add another loan</button></div>`;
+  upLoans();
+}
+function upLoans(){
+  const t=T();
+  const el=$("#lsum");if(!el)return;
+  const dti=t.i?t.em/t.i*100:0,wk=weakest();
+  el.innerHTML=S.loans.length?`<div class="stats"><div class="stat"><span class="mut">Total EMIs</span><b>${fmt(t.em)}</b></div>
+   <div class="stat"><span class="mut">Debt-to-income</span><b class="${dti>40?"warn":dti>30?"":"ok"}">${dti.toFixed(0)}%</b></div>
+   ${S.mode==="irregular"&&wk?`<div class="stat"><span class="mut">EMIs vs weakest month</span><b class="${t.em/wk>.5?"warn":""}">${(t.em/wk*100).toFixed(0)}%</b></div>`:""}</div>
+   <p class="mut">${dti>40?"Above 40% is a stress zone. Lenders get nervous here and so should you.":dti>30?"Getting heavy. Many banks prefer EMIs under about 40% of income.":"A comfortable load. Keeping EMIs under 30% leaves room for shocks."}</p>`:
+   `<p class="mut">No loans yet. Add a home or business loan to see its EMI, the interest you’ll pay and how prepayments change things.</p>`;
+  S.loans.forEach(l=>{
+    const o=$("#lo-"+l.id);if(!o)return;
+    const e=emi(l),b=sim(l,0,0,0),has=(+l.x>0)||(+l.lump>0),p=has?sim(l,+l.x||0,+l.lump||0,+l.at||1):null;
+    const y1=b.Y[1]||{i:0,p:0};
+    o.innerHTML=!e?`<p class="mut">Enter the amount, interest rate and term to see results.</p>`:`
+    <div class="stats"><div class="stat"><span class="mut">Monthly EMI</span><b>${fmt(e)}</b></div>
+     <div class="stat"><span class="mut">Total interest</span><b>${fmt(b.I)}</b></div>
+     <div class="stat"><span class="mut">Total repaid</span><b>${fmt((+l.p||0)+b.I)}</b></div></div>
+    ${p?`<div class="note">With your prepayments you’d finish <b>${Math.floor((b.m-p.m)/12)} yr ${(b.m-p.m)%12} mo earlier</b> and save <b>${fmt(b.I-p.I)}</b> in interest.</div>`:""}
+    ${l.k==="home"?`<div class="note">${taxNote(y1)} <i>Summary of rules as generally understood for the 2025–26 tax year, not yet verified against official sources. Confirm with a qualified adviser before relying on it.</i></div>`:""}
+    ${l.k==="business"?`<div class="note">Business tip: ${S.mode==="irregular"&&weakest()?`this EMI is ${(e/weakest()*100).toFixed(0)}% of your weakest recent month.`:`switch income to Irregular on the Budget tab to see how this EMI holds up in your weakest month.`} Keep a cushion of 2 to 3 EMIs in cash. Interest on a genuine business loan is usually a deductible business expense in most countries, so keep records and check with your accountant.</div>`:""}
+    <details><summary>Year-by-year schedule</summary><table><tr><th>Year</th><th>Interest</th><th>Principal</th><th>Balance</th></tr>
+    ${Object.keys(b.Y).map(y=>`<tr><td>${y}</td><td>${fmt(b.Y[y].i)}</td><td>${fmt(b.Y[y].p)}</td><td>${fmt(b.Y[y].b)}</td></tr>`).join("")}</table></details>`})
+}
+
+/* ---------- health tab ---------- */
+function renderHealth(){
+  $("#p-h").innerHTML=`<section class="card"><h2>Your financial health</h2><div id="hs"></div></section>
+  <section class="card"><h2>Emergency savings</h2><label>Cash and liquid savings you hold today (${sym()})</label>
+  <input type="number" min="0" data-a="s" data-f="saved" value="${S.saved}" placeholder="Enter amount (optional)"><p class="mut">Used to work out how many months you could cope if income stopped.</p></section>`;
+  upHealth();
+}
+function upHealth(){
+  const el=$("#hs");if(!el)return;
+  const t=T();
+  if(!t.i||t.alloc<=0){el.innerHTML=`<p>Your score needs a few details first. Enter your monthly income and set how much you plan to spend and save in each category on the Budget tab. Add any loans on the Loans tab and your emergency savings below, and we’ll work out your score.</p><button class="btn" data-tab="b">Go to Budget</button>`;return}
+  const sr=t.sv/t.i*100,dti=t.em/t.i*100,exp=t.need+t.want+t.em,run=exp?(+S.saved||0)/exp:0;
+  const p1=Math.min(1,sr/20)*35,p2=!S.loans.length||dti<=30?35:dti>=50?0:35*(50-dti)/20,p3=Math.min(1,run/6)*30;
+  let sc=Math.round(p1+p2+p3);if(t.free<-0.5)sc=Math.min(sc,50);
+  const lab=sc>=80?"Strong":sc>=60?"Steady":sc>=40?"Needs attention":"At risk";
+  const M=(n,v,txt,pt,mx)=>`<div class="meter"><div class="top"><span>${n}</span><b>${txt}</b></div><div class="pb ${pt/mx<.4?"over":""}"><i style="width:${pt/mx*100}%"></i></div><div class="mut">${v}</div></div>`;
+  const tips=[];
+  if(t.free<-0.5)tips.push("Your plan spends more than you earn. Fix that first.");
+  if(sr<20)tips.push(`Aim to save 20% of income. You’re at ${sr.toFixed(0)}%.`);
+  if(dti>30&&S.loans.length)tips.push("Your EMIs are heavy. Try the prepayment simulator on the Loans tab.");
+  if(run<6)tips.push(`Build an emergency fund of about ${fmt(exp*6)} (6 months of spending).`);
+  el.innerHTML=`<div class="score"><div class="big">${sc}</div><div><b style="font-size:20px">${lab}</b><div class="mut">out of 100, from savings rate, debt load and emergency cushion</div></div></div>
+  ${M("Savings rate",`Target: 20% or more of income`,sr.toFixed(0)+"%",p1,35)}
+  ${M("Debt burden",S.loans.length?"Target: EMIs under 30% of income":"You have no loans listed",S.loans.length?dti.toFixed(0)+"%":"None",p2,35)}
+  ${M("Emergency runway","Target: 6 months of spending",run.toFixed(1)+" months",p3,30)}
+  ${tips.length?`<div class="note"><b>Next steps</b><br>${tips.join("<br>")}</div>`:`<div class="note">Nicely balanced. Keep logging your spending each month.</div>`}`;
+}
+
+/* ---------- overview & spending ---------- */
+const spent=(id,mo)=>S.tx.filter(t=>t.c===id&&t.d.startsWith(mo)).reduce((s,t)=>s+t.a,0);
+const isSave=id=>(S.cats.find(c=>c.id===id)||{}).k==="save";
+const monthSpend=mo=>S.tx.filter(t=>t.d.startsWith(mo)&&!isSave(t.c)).reduce((s,t)=>s+t.a,0);
+const mlabel=mo=>new Date(mo+"-01T00:00").toLocaleDateString("en",{month:"long",year:"numeric"});
+const shift=(mo,d)=>{const x=new Date(mo+"-01T00:00");x.setMonth(x.getMonth()+d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")};
+const PARTS=t=>[["Loan EMIs",t.em,"--c3"],["Needs",t.need,"--c1"],["Wants",t.want,"--c2"],["Savings",t.sv,"--c4"]];
+function donut(ps,tot){const C=251.3;let o=0;return `<svg viewBox="0 0 100 100" width="150" height="150" role="img" aria-label="Allocation of income"><g transform="rotate(-90 50 50)"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--c5)" stroke-width="16"/>${ps.map(p=>{const l=tot>0?Math.min(p[1]/tot,1)*C:0,r=`<circle cx="50" cy="50" r="40" fill="none" stroke="var(${p[2]})" stroke-width="16" stroke-dasharray="${l} ${C}" stroke-dashoffset="${-o}"/>`;o+=l;return r}).join("")}</g></svg>`}
+function renderOverview(){
+  const t=T(),nm=nowMo(),sp=monthSpend(nm),plan=t.need+t.want,tot=Math.max(t.i,t.alloc);
+  if(!t.i){
+    $("#p-o").innerHTML=`<section class="card"><h2>Welcome to ArthaFlow</h2>
+      <p>Give every rupee a direction. Add your income first, then build a budget, track real spending and explore your loan options.</p>
+      <button class="btn" data-tab="b">Set up my budget</button>
+      <p class="mut" style="margin-top:12px">Your overview will fill in as you add your own numbers. Nothing here is pre-filled with assumed income or loan details.</p></section>
+      <section class="card"><h2>Your financial snapshot</h2><p class="mut">Monthly income, spending, savings progress and loan obligations will appear here once you enter your details.</p></section>`;
+    return;
+  }
+  const sv=S.tx.filter(x=>x.d.startsWith(nm)&&isSave(x.c)).reduce((s,x)=>s+x.a,0),pg=t.sv?Math.min(100,sv/t.sv*100):0;
+  $("#p-o").innerHTML=`<section class="card"><div class="two"><div><div class="mut">Available to allocate</div><div class="big ${t.free<-.5?"warn":""}">${fmt(t.free)}</div>
+  <div class="stats"><div class="stat"><span class="mut">Monthly income</span><b>${fmt(t.i)}</b></div><div class="stat"><span class="mut">Planned spending</span><b>${fmt(plan+t.em)}</b></div><div class="stat"><span class="mut">Spent in ${mlabel(nm)}</span><b class="${sp>plan?"warn":""}">${fmt(sp)}</b></div></div></div>
+  <div style="text-align:center">${donut(PARTS(t),tot)}<div class="leg" style="justify-content:center">${PARTS(t).map(p=>`<span style="--k:var(${p[2]})">${p[0]}</span>`).join("")}</div></div></div></section>
+  <section class="card"><h2>Savings progress</h2><div style="display:flex;justify-content:space-between"><span>${fmt(sv)} saved this month</span><span class="mut">goal ${fmt(t.sv)}</span></div><div class="pb"><i style="width:${pg}%"></i></div><p class="mut">Log contributions on the Spending tab under a Saving category. Emergency fund: ${fmt(S.saved)}.</p></section>
+  <section class="card"><h2>Loan obligations</h2>${S.loans.some(l=>emi(l)>0)?S.loans.filter(l=>emi(l)>0).map(l=>`<div class="tx"><span>${esc(l.n)||"Loan"} <span class="mut">${Math.max(1,Math.round(N(l.y,0,50)*12))} month term</span></span><b>${fmt(emi(l))} / month</b></div>`).join("")+`<p class="mut">Total ${fmt(t.em)} a month, ${t.i?(t.em/t.i*100).toFixed(0):0}% of income.</p>`:`<p class="mut">No loans added.</p>`}</section>`;
+}
+function renderSpend(){
+ const mo=S.mo,t=T(),plan=t.need+t.want,td=nowMo()===mo?mo+"-"+String(new Date().getDate()).padStart(2,"0"):mo+"-01";
+ const list=S.tx.filter(x=>x.d.startsWith(mo)).sort((a,b)=>b.d.localeCompare(a.d));
+ const rows=S.cats.map(c=>{const p=catAmt(c),a=spent(c.id,mo);return `<tr><td>${esc(c.n)||"Unnamed"}</td><td>${fmt(p)}</td><td>${fmt(a)}</td><td class="${a>p&&c.k!=="save"?"warn":""}">${fmt(p-a)}</td></tr>`}).join("");
+ const ms=[5,4,3,2,1,0].map(i=>shift(mo,-i)),vs=ms.map(monthSpend),mx=Math.max(plan,...vs,1),pv=vs[4],cv=vs[5];
+ const bars=vs.map((v,i)=>{const h=v/mx*90;return `<rect x="${i*50+8}" y="${100-h}" width="34" height="${h}" rx="4" fill="${v>plan?"var(--rd)":"var(--pr)"}"/><text x="${i*50+25}" y="114" text-anchor="middle" font-size="9" fill="var(--mut)">${new Date(ms[i]+"-01T00:00").toLocaleDateString("en",{month:"short"})}</text>`}).join("");
+ const py=100-plan/mx*90;
+ $("#p-t").innerHTML=`<div class="mo"><button class="btn sm ghost" data-act="mp" aria-label="Previous month">‹</button><b>${mlabel(mo)}</b><button class="btn sm ghost" data-act="mn" aria-label="Next month">›</button></div>
+ <section class="card"><h2>Add a transaction</h2><div class="grid"><div><label>Date</label><input type="date" id="tx-d" value="${td}"></div><div><label>Description</label><input id="tx-e" maxlength="80" placeholder="e.g. Weekly groceries"></div><div><label>Category</label><select id="tx-c">${S.cats.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join("")}</select></div><div><label>Amount (${sym()})</label><input type="number" id="tx-a" min="0" step="any"></div></div><button class="btn" style="margin-top:10px" data-act="addtx">Add</button></section>
+ <section class="card"><h2>Planned vs actual</h2><table><tr><th>Category</th><th>Planned</th><th>Actual</th><th>Left</th></tr>${rows}</table><p class="mut">Past months are compared against your current plan.</p></section>
+ <section class="card"><h2>Spending trend</h2><svg viewBox="0 0 300 120" width="100%" role="img" aria-label="Spending over the last six months">${bars}<line x1="0" x2="300" y1="${py}" y2="${py}" stroke="var(--sa)" stroke-dasharray="4 3"/></svg>
+ <p class="mut">Dashed line is your planned needs and wants. ${pv>0?`${mlabel(mo).split(" ")[0]} spending is ${Math.abs((cv-pv)/pv*100).toFixed(0)}% ${cv<=pv?"lower":"higher"} than ${mlabel(ms[4]).split(" ")[0]}.`:"Add a few months of transactions to see whether you’re improving."}</p></section>
+ <section class="card"><h2>Transactions</h2>${list.length?list.map(x=>`<div class="tx"><span>${x.d} · ${esc(x.e)||"(no description)"} <span class="mut">${esc((S.cats.find(c=>c.id===x.c)||{}).n)}</span></span><span><b>${fmt(x.a)}</b> <button class="x" data-act="deltx" data-id="${x.id}" aria-label="Delete transaction">×</button></span></div>`).join(""):`<p class="mut">Nothing recorded for this month yet.</p>`}</section>`}
+document.addEventListener("click",e=>{const a=e.target.closest("[data-act]");if(!a)return;const k=a.dataset.act;
+ if(k==="mp"||k==="mn"){S.mo=shift(S.mo,k==="mp"?-1:1);save();renderSpend()}
+ if(k==="addtx"){const d=$("#tx-d").value,c=$("#tx-c").value,x=Number($("#tx-a").value);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!(x>0)||!S.cats.some(q=>q.id===c)){alert("Enter a date, a category and an amount above zero.");return}
+  S.tx.push({id:uid(),d,e:$("#tx-e").value.slice(0,80),c,a:Math.min(x,1e12)});S.mo=d.slice(0,7);save();renderSpend()}
+ if(k==="deltx"){S.tx=S.tx.filter(x=>x.id!==a.dataset.id);save();renderSpend()}
+ if(k==="exp")$("#bk").value=JSON.stringify(S,null,1);
+ if(k==="imp"){try{const y=clean(JSON.parse($("#bk").value));if(!y)throw 0;if(!confirm("Replace your current data with this backup?"))return;S=y;save();$("#cur").value=S.cur;show("o")}catch(_){alert("That doesn’t look like a valid ArthaFlow backup.")}}});
+
+/* ---------- events ---------- */
+const R={o:renderOverview,b:renderBudget,t:renderSpend,l:renderLoans,h:renderHealth};
+function show(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  ["o","b","t","l","h"].forEach(k=>$("#p-"+k).hidden=k!==t);R[t]()}
+document.addEventListener("input",e=>{
+  const d=e.target.dataset;if(!d.a)return;let v=e.target.value;
+  const num=e.target.type==="number";
+  if(d.a==="s")S[d.f]=num?(v===""?"":+v):v;
+  else if(d.a==="m")S.months[+d.i]=v===""?"":+v;
+  else{const o=(d.a==="c"?S.cats:S.loans).find(x=>x.id===e.target.closest("[data-id]").dataset.id);
+    if(o){o[d.f]=num?(v===""?"":+v):v;
+      if(d.f==="n"&&d.a==="l"){const h=e.target.closest(".card").querySelector("h2");h.textContent=v||"Loan"}}}
+  save();upBudget();upLoans();upHealth();renderOverview()});
+document.addEventListener("click",e=>{
+  const tb=e.target.closest("[data-tab]");if(tb)return show(tb.dataset.tab);
+  const m=e.target.closest("[data-mode]");if(m){S.mode=m.dataset.mode;save();return renderBudget()}
+  const a=e.target.closest("[data-act]");if(!a||/^(mp|mn|addtx|deltx|exp|imp)$/.test(a.dataset.act))return;
+  const id=a.closest("[data-id]")?.dataset.id,act=a.dataset.act;
+  if(act==="tog"){const c=S.cats.find(x=>x.id===id);c.t=c.t==="pct"?"amt":"pct";
+    c.v=c.v===""?"":c.t==="amt"?Math.round(inc()*c.v/100):(inc()?+(c.v/inc()*100).toFixed(1):0)}
+  if(act==="delc"){S.cats=S.cats.filter(x=>x.id!==id);S.tx=S.tx.filter(t=>t.c!==id)}
+  if(act==="addc")S.cats.push({id:uid(),n:"New category",k:"need",t:"pct",v:"",s:""});
+  if(act==="dell")S.loans=S.loans.filter(x=>x.id!==id);
+  if(act==="addl"){const k=a.dataset.kind||"other";S.loans.push({id:uid(),n:{home:"Home loan",business:"Business loan",other:"Loan"}[k],k,p:"",r:"",y:"",x:"",lump:"",at:""})}
+  save();(act.endsWith("l")?renderLoans:renderBudget)();renderOverview()});
+$("#cur").innerHTML=CUR.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join("");
+$("#cur").value=S.cur;
+document.addEventListener("change",e=>{if(e.target.id==="cc"){S.cc=e.target.value;save();upLoans()}});
+$("#cur").onchange=e=>{S.cur=e.target.value;S.cc=CC[S.cur]||"XX";save();show(document.querySelector(".tabs .on").dataset.tab)};
+$("#reset").onclick=()=>{if(confirm("Delete all your saved data and start again?")){S=def();save();$("#cur").value=S.cur;show("b")}};
+show("o");
+</script>
+</body>
+</html>
