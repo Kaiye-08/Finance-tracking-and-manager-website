@@ -65,12 +65,14 @@ details summary{cursor:pointer;color:var(--pr);font-weight:600;margin-top:12px}
 .mo{display:flex;align-items:center;gap:10px;margin-bottom:12px}.mo b{min-width:140px;text-align:center}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:center}
 .tabs button{font-size:14px}@media(max-width:520px){.tabs button{padding:8px 2px;font-size:12.5px}}
+#cloud .grid{margin:10px 0}.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+#cl-status{font-size:14px;margin:8px 0;min-height:1.4em}#cl-status.err{color:var(--rd);font-weight:600}#cl-status.good{color:var(--pr);font-weight:600}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <div><h1>ArthaFlow</h1><div class="mut">Budget, loans and financial health in one place. Your data stays in this browser.</div></div>
+  <div><h1>ArthaFlow</h1><div class="mut">Budget, loans and financial health in one place. Your data stays in this browser unless you turn on cloud sync.</div></div>
   <div style="display:flex;gap:8px;align-items:center"><select id="cur" aria-label="Currency" style="width:auto"></select><button class="btn ghost sm" id="reset">Reset all data</button></div>
 </header>
 <nav class="tabs" role="tablist">
@@ -80,7 +82,8 @@ details summary{cursor:pointer;color:var(--pr);font-weight:600;margin-top:12px}
   <div id="p-o"></div><div id="p-b" hidden></div><div id="p-t" hidden></div><div id="p-l" hidden></div><div id="p-h" hidden></div>
 </main>
 <p class="mut" style="margin-top:24px">Planning tool only, not financial or tax advice. Tax notes are general summaries and may be out of date, so confirm with a qualified adviser.</p>
-<details class="card"><summary>Backup and data storage</summary><p class="mut">Your data is saved only in this browser (localStorage). It isn’t encrypted, synced between devices or backed up, and clearing browser data erases it. Avoid shared computers. Use “Show backup” to generate a copyable text backup, then save it somewhere safe. Backups are manual.</p><textarea id="bk" rows="5" style="width:100%;font:13px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:8px;padding:8px" aria-label="Backup data"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm" data-act="exp">Show backup</button><button class="btn sm ghost" data-act="imp">Restore from text</button></div></details>
+<details class="card" id="cloud"><summary>Account and cloud sync <span id="cl-badge" class="mut"></span></summary><div id="cl-body"></div></details>
+<details class="card"><summary>Backup and data storage</summary><p class="mut">By default your data is saved only in this browser (localStorage). It isn’t encrypted or backed up, and clearing browser data erases it. If you log in under “Account and cloud sync”, a copy is also kept on that account’s server. Avoid shared computers. Use “Show backup” to generate a copyable text backup, then save it somewhere safe. Backups are manual.</p><textarea id="bk" rows="5" style="width:100%;font:13px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:8px;padding:8px" aria-label="Backup data"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm" data-act="exp">Show backup</button><button class="btn sm ghost" data-act="imp">Restore from text</button></div></details>
 </div>
 <script>
 const K="arthaflow.v1",LEGACY_K="paisaplan.v1",$=s=>document.querySelector(s);
@@ -129,7 +132,7 @@ let S=(()=>{try{
   if(legacy){const y=clean(JSON.parse(legacy));if(y){try{localStorage.setItem(K,JSON.stringify(y))}catch(e){}return y}}
 }catch(e){}return def()})();
 if(!S.cur)S.cur="INR";
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}if(typeof Cloud!=="undefined"&&Cloud)Cloud.queue()};
 
 /* ---------- maths ---------- */
 function inc(){
@@ -339,8 +342,196 @@ $("#cur").innerHTML=CUR.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join(
 $("#cur").value=S.cur;
 document.addEventListener("change",e=>{if(e.target.id==="cc"){S.cc=e.target.value;save();upLoans()}});
 $("#cur").onchange=e=>{S.cur=e.target.value;S.cc=CC[S.cur]||"XX";save();show(document.querySelector(".tabs .on").dataset.tab)};
-$("#reset").onclick=()=>{if(confirm("Delete all your saved data and start again?")){S=def();save();$("#cur").value=S.cur;show("b")}};
+$("#reset").onclick=()=>{if(confirm(Cloud.on()?"Delete all your saved data, including your cloud copy, and start again?":"Delete all your saved data and start again?")){S=def();save();$("#cur").value=S.cur;show("b")}};
 show("o");
+/* ---------- optional cloud sync (talks to the ArthaFlow API) ---------- */
+var Cloud=(()=>{
+const KS="arthaflow.sync.v1",API_DEFAULT="https://arthaflow-api.onrender.com"; /* change to your hosted API address once it is online */
+const blank=()=>({api:API_DEFAULT,token:"",email:"",map:{c:{},t:{}},snap:{c:{},t:{},s:""},choose:false});
+let st=(()=>{try{const x=JSON.parse(localStorage.getItem(KS));
+  if(x&&typeof x==="object")return Object.assign(blank(),x,{map:Object.assign({c:{},t:{}},x.map),snap:Object.assign({c:{},t:{},s:""},x.snap)})}catch(e){}return blank()})();
+const persist=()=>{try{localStorage.setItem(KS,JSON.stringify(st))}catch(e){}};
+let busy=false,again=false,timer=null,note=["",""];
+const on=()=>!!st.token;
+const clock=()=>new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+const cleanApi=v=>String(v||"").trim().replace(/\/+$/,"");
+
+/* what we send to the API, and the same shapes read back from it */
+const r2=v=>Math.round((+v||0)*100)/100;
+const clamp=(v,lo)=>Math.min(1e12,Math.max(lo,v));
+const catWire=c=>({name:String(c.n==null?"":c.n).slice(0,60),kind:c.k,budget_type:c.t,budget_value:clamp(r2(c.v),0)});
+const txWire=(t,cid)=>({category_id:cid,date:t.d,description:String(t.e==null?"":t.e).slice(0,80),amount:clamp(r2(t.a),.01)});
+const catRead=c=>({name:c.name,kind:c.kind,budget_type:c.budget_type,budget_value:clamp(r2(c.budget_value),0)});
+const txRead=t=>({category_id:t.category_id,date:t.date,description:t.description,amount:clamp(r2(t.amount),.01)});
+const sortDeep=v=>Array.isArray(v)?v.map(sortDeep):(v&&typeof v==="object")?Object.keys(v).sort().reduce((o,k)=>(o[k]=sortDeep(v[k]),o),{}):v;
+const J=v=>JSON.stringify(sortDeep(v));
+const setWire=()=>{const o={};Object.keys(S).forEach(k=>{if(k!=="cats"&&k!=="tx"&&k!=="mo")o[k]=S[k]});return o};
+
+function setStatus(text,cls){note=[text,cls||""];const el=$("#cl-status");if(el){el.textContent=text;el.className=cls||""}}
+
+async function api(path,o){o=o||{};
+  const h={};if(o.auth!==false&&st.token)h.Authorization="Bearer "+st.token;
+  let body;if(o.form)body=new URLSearchParams(o.form);else if(o.body!==undefined){h["Content-Type"]="application/json";body=JSON.stringify(o.body)}
+  let r;try{r=await fetch(st.api+path,{method:o.method||"GET",headers:h,body})}catch(e){throw{net:true}}
+  if(r.status===401&&o.auth!==false)throw{auth:true};
+  if(!r.ok){let m="The server said no ("+r.status+")";
+    try{const j=await r.json();if(typeof j.detail==="string")m=j.detail;else if(Array.isArray(j.detail))m=j.detail.map(d=>d.msg).join("; ")}catch(e){}
+    throw{status:r.status,msg:m}}
+  return r.status===204?null:r.json()}
+
+async function pullAll(){
+  const cats=await api("/categories");let tx=[];
+  for(let off=0;;off+=500){const p=await api("/transactions?limit=500&offset="+off);tx=tx.concat(p);if(p.length<500)break}
+  const s=await api("/settings");
+  return{cats,tx,settings:s.data||{}}}
+
+/* replace this browser's data with what the cloud holds */
+function adopt(sv){
+  const y=clean(Object.assign({},sv.settings,{
+    cats:sv.cats.map(c=>({id:"c_"+c.id,n:c.name,k:c.kind,t:c.budget_type,v:Number(c.budget_value)||""})),
+    tx:sv.tx.map(t=>({id:"t_"+t.id,d:t.date,e:t.description,c:"c_"+t.category_id,a:Number(t.amount)}))}));
+  if(!y)throw{msg:"Couldn’t read the cloud data"};
+  S=y;st.map={c:{},t:{}};st.snap={c:{},t:{},s:""};
+  const haveC=new Set(sv.cats.map(c=>c.id)),haveT=new Set(sv.tx.map(t=>t.id));
+  S.cats.forEach(c=>{const m=/^c_(\d+)$/.exec(c.id);if(m&&haveC.has(+m[1])){st.map.c[c.id]=+m[1];st.snap.c[c.id]=JSON.stringify(catWire(c))}});
+  S.tx.forEach(t=>{const m=/^t_(\d+)$/.exec(t.id),cm=/^c_(\d+)$/.exec(t.c);if(m&&cm&&haveT.has(+m[1])){st.map.t[t.id]=+m[1];st.snap.t[t.id]=JSON.stringify(txWire(t,+cm[1]))}});
+  st.snap.s=J(setWire());persist();
+  try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
+  $("#cur").value=S.cur;show(document.querySelector(".tabs .on").dataset.tab)}
+
+/* is there anything on the cloud that this browser doesn’t have yet? */
+function newerOnCloud(sv){
+  const rc={},rt={};Object.keys(st.map.c).forEach(l=>rc[st.map.c[l]]=l);Object.keys(st.map.t).forEach(l=>rt[st.map.t[l]]=l);
+  if(sv.cats.length!==Object.keys(rc).length||sv.tx.length!==Object.keys(rt).length)return true;
+  for(const c of sv.cats){const l=rc[c.id];if(l==null||JSON.stringify(catRead(c))!==st.snap.c[l])return true}
+  for(const t of sv.tx){const l=rt[t.id];if(l==null||JSON.stringify(txRead(t))!==st.snap.t[l])return true}
+  return J(sv.settings)!==st.snap.s}
+
+/* push this browser’s changes: create, update, then delete */
+async function upsert(k,path,l,w){
+  const M=st.map[k],SN=st.snap[k],js=JSON.stringify(w);
+  if(M[l]==null){const r=await api(path,{method:"POST",body:w});M[l]=r.id;SN[l]=js;persist();return}
+  if(SN[l]===js)return;
+  try{await api(path+"/"+M[l],{method:"PATCH",body:w});SN[l]=js}
+  catch(e){if(e.status!==404)throw e;delete M[l];delete SN[l];again=true}
+  persist()}
+async function gone(p){try{await api(p,{method:"DELETE"})}catch(e){if(e.status!==404)throw e}}
+async function run(){
+  let bad=0;const cats=S.cats.slice(),txs=S.tx.slice();
+  for(const c of cats){try{await upsert("c","/categories",c.id,catWire(c))}catch(e){if(e.status===422)bad++;else throw e}}
+  for(const t of txs){const cid=st.map.c[t.c];if(cid==null)continue;
+    try{await upsert("t","/transactions",t.id,txWire(t,cid))}
+    catch(e){
+      if(e.status===422&&/category_id does not exist/.test(e.msg||"")){delete st.map.c[t.c];delete st.snap.c[t.c];persist();again=true}  /* the cloud lost that category: create it again */
+      else if(e.status===422)bad++;else throw e}}
+  const liveT=new Set(S.tx.map(t=>t.id)),liveC=new Set(S.cats.map(c=>c.id));
+  for(const l of Object.keys(st.map.t))if(!liveT.has(l)){await gone("/transactions/"+st.map.t[l]);delete st.map.t[l];delete st.snap.t[l];persist()}
+  for(const l of Object.keys(st.map.c))if(!liveC.has(l)){await gone("/categories/"+st.map.c[l]);delete st.map.c[l];delete st.snap.c[l];persist()}
+  const sj=J(setWire());
+  if(st.snap.s!==sj){await api("/settings",{method:"PUT",body:{data:JSON.parse(sj)}});st.snap.s=sj;persist()}
+  return bad}
+
+function fail(e){
+  if(e&&e.net){setStatus("Can’t reach the API at "+st.api+". Your changes are saved in this browser and will sync when it’s back.","err");clearTimeout(timer);timer=setTimeout(flush,30000)}
+  else if(e&&e.auth){st.token="";persist();setStatus("Your session expired. Log in again to keep syncing. Nothing has been lost.","err");renderCloud()}
+  else setStatus("Sync problem: "+((e&&(e.msg||e.message))||"unknown error"),"err")}
+
+async function flush(){
+  if(!on()||st.choose)return false;
+  if(busy){again=true;return false}
+  busy=true;clearTimeout(timer);
+  try{setStatus("Syncing…");let bad=0;
+    let passes=0;do{again=false;bad=await run()}while(again&&++passes<5);
+    st.last=Date.now();persist();
+    setStatus(bad?"Synced, but "+bad+" item(s) couldn’t be saved because their data is invalid.":"Synced at "+clock(),bad?"err":"good");
+    return !bad}
+  catch(e){fail(e);return false}
+  finally{busy=false}}
+
+function queue(){if(!on()||st.choose)return;if(busy){again=true;return}clearTimeout(timer);timer=setTimeout(flush,800)}
+
+async function refresh(){
+  if(!on()||st.choose)return;
+  if(!(await flush()))return;
+  try{const before=JSON.stringify(S),sv=await pullAll();
+    if(JSON.stringify(S)!==before)return;           /* you edited while we were checking */
+    if(newerOnCloud(sv)){adopt(sv);setStatus("Loaded the latest from the cloud at "+clock(),"good")}
+    else setStatus("Up to date at "+clock(),"good")}
+  catch(e){fail(e)}}
+
+const pristine=()=>!S.tx.length&&!S.loans.length&&!S.fixed&&S.months.every(v=>v==="")&&S.cats.every(c=>c.v===""||c.v==null);
+const hasMap=()=>Object.keys(st.map.c).length||Object.keys(st.map.t).length||st.snap.s;
+
+async function start(same){
+  renderCloud();
+  try{
+    if(same){await refresh();return}
+    const sv=await pullAll();
+    const empty=!sv.cats.length&&!sv.tx.length&&!Object.keys(sv.settings).length;
+    if(empty){setStatus("Uploading your data…");await flush();return}
+    if(pristine()){adopt(sv);setStatus("Loaded your cloud data at "+clock(),"good");return}
+    st.choose=true;persist();renderCloud(true)}
+  catch(e){fail(e)}}
+
+async function login(email,pw,create){
+  email=String(email||"").trim().toLowerCase();
+  if(!email||!pw){setStatus("Enter your email and password.","err");return}
+  st.api=cleanApi($("#cl-api")?$("#cl-api").value:st.api)||API_DEFAULT;
+  if(!/^https?:\/\//.test(st.api)){setStatus("The API address must start with http:// or https://","err");return}
+  setStatus(create?"Creating your account…":"Logging in…");
+  try{
+    if(create)await api("/auth/register",{method:"POST",auth:false,body:{email,password:pw}});
+    const r=await api("/auth/login",{method:"POST",auth:false,form:{username:email,password:pw}});
+    const same=st.email===email&&!!hasMap();
+    if(!same){st.map={c:{},t:{}};st.snap={c:{},t:{},s:""}}
+    st.token=r.access_token;st.email=email;st.choose=false;persist();
+    await start(same)}
+  catch(e){if(e&&e.net)fail(e);else setStatus((e&&e.msg)||"Something went wrong.","err")}}
+
+async function useCloud(){
+  try{setStatus("Loading…");const sv=await pullAll();adopt(sv);st.choose=false;persist();renderCloud();setStatus("Loaded your cloud data at "+clock(),"good")}
+  catch(e){fail(e)}}
+async function useLocal(){
+  if(!confirm("This replaces everything in your cloud account with the data in this browser. Continue?"))return;
+  try{setStatus("Clearing the old cloud copy…");const sv=await pullAll();
+    for(const t of sv.tx)await gone("/transactions/"+t.id);
+    for(const c of sv.cats)await gone("/categories/"+c.id);
+    st.map={c:{},t:{}};st.snap={c:{},t:{},s:""};st.choose=false;persist();renderCloud();await flush()}
+  catch(e){fail(e)}}
+function logout(){clearTimeout(timer);const a=st.api;st=Object.assign(blank(),{api:a});persist();renderCloud()}
+
+function renderCloud(open){
+  const body=$("#cl-body");if(!body)return;
+  const badge=$("#cl-badge");if(badge)badge.textContent=on()?"· signed in":"";
+  let h;
+  if(on()&&st.choose)h=`<p>Your account already has data, and so does this browser. Pick the one to keep. <b>Nothing has been changed yet.</b></p>
+   <div class="btns"><button class="btn sm" data-cl="usecloud">Use my cloud data</button><button class="btn sm ghost" data-cl="uselocal">Upload this browser’s data instead</button><button class="btn sm ghost" data-cl="logout">Log out</button></div><div id="cl-status"></div>`;
+  else if(on())h=`<p>Signed in as <b>${esc(st.email)}</b> <span class="mut">· ${esc(st.api)}</span></p><div id="cl-status"></div>
+   <div class="btns"><button class="btn sm" data-cl="sync">Sync now</button><button class="btn sm ghost" data-cl="refresh">Refresh from cloud</button><button class="btn sm ghost" data-cl="logout">Log out</button></div>
+   <p class="mut">Logging out keeps your data in this browser and stops syncing.</p>`;
+  else h=`<p class="mut">Optional. Log in to keep a copy of your categories, spending and settings on the ArthaFlow API so you can use them on other devices. The app works fine without it.</p>
+   <div class="grid"><div><label for="cl-api">API address</label><input id="cl-api" value="${esc(st.api)}" autocomplete="off" spellcheck="false"></div>
+   <div><label for="cl-em">Email</label><input id="cl-em" type="email" autocomplete="username" value="${esc(st.email)}"></div>
+   <div><label for="cl-pw">Password (8+ characters)</label><input id="cl-pw" type="password" autocomplete="current-password"></div></div>
+   <div class="btns"><button class="btn sm" data-cl="login">Log in</button><button class="btn sm ghost" data-cl="register">Create account</button></div><div id="cl-status"></div>`;
+  body.innerHTML=h;
+  if(open){const d=$("#cloud");if(d)d.open=true}
+  setStatus(note[0],note[1])}
+
+function init(){
+  renderCloud(on()&&st.choose);
+  const box=$("#cloud");
+  if(box){
+    box.addEventListener("click",e=>{const b=e.target.closest("[data-cl]");if(!b)return;const k=b.dataset.cl;
+      if(k==="login"||k==="register")login($("#cl-em").value,$("#cl-pw").value,k==="register");
+      else if(k==="sync")flush();else if(k==="refresh")refresh();else if(k==="logout")logout();
+      else if(k==="usecloud")useCloud();else if(k==="uselocal")useLocal()});
+    box.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="cl-pw")login($("#cl-em").value,e.target.value,false)})}
+  window.addEventListener("online",()=>{flush()});
+  if(on()&&!st.choose)refresh()}
+
+return{queue,flush,refresh,login,logout,useCloud,useLocal,init,on,state:()=>st}})();
+Cloud.init();
 </script>
 </body>
 </html>
